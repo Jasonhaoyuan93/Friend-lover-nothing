@@ -1,0 +1,117 @@
+plugins {
+	id 'org.springframework.boot' version '2.7.4'
+	id 'io.spring.dependency-management' version '1.0.14.RELEASE'
+	// Build Java: https://docs.gradle.org/current/userguide/building_java_projects.html
+	id 'java'
+	// https://docs.gradle.org/current/userguide/pmd_plugin.html#header
+	id 'pmd'
+	// https://docs.gradle.org/current/userguide/jacoco_plugin.html
+	id 'jacoco'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-web-services'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'mysql:mysql-connector-java'
+	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+	testImplementation 'com.openpojo:openpojo:0.9.1'
+	implementation 'javax.xml.bind:jaxb-api:2.3.1'
+	implementation 'com.amazonaws:aws-java-sdk-core:1.12.339'
+	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.339'
+	implementation 'commons-io:commons-io:2.6'
+
+
+}
+
+pmd {
+	ignoreFailures=true
+	pmdTest.enabled=false
+	ruleSets = [
+			"category/java/bestpractices.xml",
+			"category/java/errorprone.xml",
+			"category/java/codestyle.xml"
+			//"java-basic",
+			//"java-braces",
+			//"java-strings",
+	]
+}
+javadoc {
+	doLast {
+		String fixedBuildDir = buildDir.toString().replace('\\', '/')
+		println "file:///$fixedBuildDir/docs/javadoc/index.html"
+	}
+}
+jacoco {
+	toolVersion = "0.8.7"
+}
+jacocoTestReport {
+	reports {
+		html.destination file("${buildDir}/jacocoHtml")
+	}
+	doLast {
+		String fixedBuildDir = buildDir.toString().replace('\\', '/')
+		println "file:///$fixedBuildDir/jacocoHtml/index.html"
+	}
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				// minimum percentage of code coverage
+				minimum = 0.0
+			}
+		}
+		rule {
+			enabled = false
+			element = 'CLASS'
+			includes = ['org.gradle.*']
+			limit {
+				counter = 'LINE'
+				value = 'TOTALCOUNT'
+				maximum = 0.3
+			}
+		}
+	}
+}
+// Fail the build if code coverage isn't high enough
+check.dependsOn jacocoTestCoverageVerification
+// Run code coverage after tests run
+jacocoTestReport.mustRunAfter test
+task doAll {
+	// Runs a java build. Imported from the java plugin
+	dependsOn build
+	// Runs all the tests. Imported from the java plugin.
+	dependsOn test
+	// Runs pmd. Imported by pmd plugin
+	dependsOn check
+	// Runs java doc. Imported from the java plugin
+	dependsOn javadoc
+	println 'all done!'
+}
+test {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}

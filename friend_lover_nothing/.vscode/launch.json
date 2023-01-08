@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "name": "Flutter (test/signup_page_test.dart)",
+            "type": "dart",
+            "request": "launch",
+            "program": "test/signup_page_test.dart"
+        }
+    ]
+}

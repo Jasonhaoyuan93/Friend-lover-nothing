@@ -1,0 +1,36 @@
+name: Flutter Test
+on:
+  push:
+    paths:
+      - 'friend_lover_nothing/**'
+      - '.github/workflows/flutter_test.yml'
+    branches: [ main ]
+  pull_request:
+    paths:
+      - 'friend_lover_nothing/**'
+      - '.github/workflows/flutter_test.yml'
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '3.3.6'
+        
+      - name: Get all Flutter Packages
+        working-directory: friend_lover_nothing
+        run: flutter pub get
+
+      - name: Run Flutter Test
+        working-directory: friend_lover_nothing
+        run: flutter test
